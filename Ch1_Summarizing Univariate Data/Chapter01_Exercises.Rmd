@@ -1,0 +1,130 @@
+---
+title: "Chapter 1, Exercises"
+author: "Statistical Methods in Water Resources: 2nd Edition Team"
+date: "October 26, 2016"
+output: html_document
+---
+
+# Exercise 1.1
+```{r}
+
+x <- c(0.001, 0.030, 0.10, 0.003, 0.004, 0.454, 0.007, 0.051, 0.49, 0.020, 0.077, 1.02)
+
+# compute the mean
+meanValue <- mean(x)
+meanValue <- format(meanValue, digits = 3)
+print(meanValue, quote = FALSE)
+
+# compute the trimmed mean
+# first with minimal trimming
+trimMean10 <- mean(x, trim = 0.10)
+print(format(trimMean10, digits = 3), quote = FALSE)
+# now more trimming
+trimMean20 <- mean(x, trim = 0.20)
+print(format(trimMean20, digits = 3), quote = FALSE)
+
+# compute the geometric mean
+
+y <- log(x)
+ybar <- mean(y)
+geomean <- exp(ybar)
+print(format(geomean, digits = 3), quote = FALSE)
+
+# compute the median
+
+Med <- median(x)
+print(format(Med, digits = 3), quote = FALSE)
+```
+
+The sample is highly positively skewed (right skewed)  The mean is strongly influenced by the highest observations.  The two versions of the trimmed mean are somewhat less influenced by the very high values but still, they have a strong effect on the trimmed mean values.
+
+The geometric mean gives a measure of central tendency that is much lower because the log transformation was used on the data.  The median is also much lower than the mean or trimmed mean, it is not influenced by the magnitude of the very high values in the data set.
+
+# Exercise 1.2
+```{r}
+
+# compute the standard deviation
+
+stdDev <- sd(x)
+print(format(stdDev, digits = 3), quote = FALSE)
+
+# compute the interquartile range
+# first step is to compute the five quantiles 0%, 25%, 50%, 75%, and 100%
+# then subtract the 25% from the 75%
+
+quant <- as.numeric(quantile(x, type = 6))
+IQR <- quant[4] - quant[2]
+print(format(IQR,digits = 3), quote = FALSE)
+
+# compute the Median Absolute Deviation 
+
+dev <- x - Med
+absDev <- abs(dev)
+MAD <- median(absDev)
+print(format(MAD, digits = 3), quote = FALSE)
+
+# compute the skewness coefficient
+
+#  Because R doesn't have its own function for computing g (the skewness coefficient)
+#  We have written one that can be used for this purpose
+
+myskew <- function(x){
+	n <- length(x)
+	denom <- (n - 1) * (n - 2) * ((sd(x))^3)
+	xbar <- mean(x)
+	numerator <- n * sum((x - xbar)^3)
+	g <- numerator / denom
+	return(g)
+}
+
+# now we will use it
+
+g <- myskew(x)
+print(format(g,digits = 3), quote=FALSE)
+
+# now the quartile skew
+
+numerator <- (quant[4] - quant[3]) - (quant[3] - quant[2])
+denom <- quant[4] - quant[2]
+qs <- numerator / denom
+print(format(qs, digits = 3), quote = FALSE)
+```
+Because the data set is asymmetric the MAD is small and the standard deviation and IQR are much larger.
+
+#Exercise 1.3
+```{r}
+
+x <- c(0.3, 0.9, 0.36, 0.92, 0.5, 1.0, 0.7, 9.7, 0.7, 1.3)
+
+xBar <- mean(x)
+stdDev <- sd(x)
+Med <- median(x)
+quant <- as.numeric(quantile(x, type = 6))
+IQR <- quant[4] - quant[2]
+y <- log(x)
+ybar <- mean(y)
+geomean <- exp(ybar)
+dev <- x - Med
+absDev <- abs(dev)
+MAD <- median(absDev)
+g <- myskew(x)
+numerator <- (quant[4] - quant[3]) - (quant[3] - quant[2])
+denom <- quant[4] - quant[2]
+qs <- numerator / denom
+ans1 <- paste("sample mean =", format(xBar, digits = 2),"   standard deviation =", format(stdDev, digits = 2))
+ans2 <- paste("median =",format(Med, digits = 2),"   IQR =", format(IQR, digits = 2))
+ans3 <- paste("geometric mean =",format(geomean, digits = 2),"   MAD = ", 
+              format(MAD, digits = 2))
+ans4 <- paste("skew =", format(g, digits = 2), "  quartile skew =", format(qs, digits = 2))
+print(ans1, quote = FALSE)
+print(ans2, quote = FALSE)
+print(ans3, quote = FALSE)
+print(ans4, quote = FALSE)
+```
+The largest observation is an outlier.  Though the skew appears to be strongly positive, and the standard deviation large, this is due only to the effect of that one point.  The majority of the data are not skewed, as shown by the more resistant quartile skew coefficient.
+
+a) Assuming the outling observation is accurate, representing some high-nitrogen location which is important to have sampled, the mean must be used to compute the mass of nitrogen falling per unit area.  It would be best if it computed by weighting the concentrations by the area at each one represents.  The median would under-represent this mass loading.
+
+b) The median would be a better "typical" concentration, and the IQR a better measure of the "typical" variability than the mean and standard deviation.  This is due to the strong effect of the one unusual point on these traditional measures of location and variability.
+
+
