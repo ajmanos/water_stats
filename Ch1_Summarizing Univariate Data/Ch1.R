@@ -13,3 +13,9 @@ trimMean <- mean(x, trim = 0.5)
 # Compute the mode:
 y <- table(as.vector(x))
 modeX <- as.numeric(names(y) [y == max(y)])
+
+# Compute the standard deviation:
+stdDev <- sd(x)
+
+# Compute the variance:
+varX <- var(x)
