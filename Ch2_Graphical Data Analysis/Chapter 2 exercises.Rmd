@@ -1,0 +1,169 @@
+---
+title: "Chapter 2, Exercises"
+author: "Statistical Methods in Water Resources: 2nd Edition Team"
+date: "November 17, 2016"
+output: html_document
+---
+
+# Exercise 2.1
+The data are in file OtterCreek.RData read in the data
+
+```{r}
+load("OtterCreek.RData")
+kQ <- OtterCreek$Q / 1000
+par(las = 1, tck = 0.02, xaxs = "i", yaxs = "i")
+hist(kQ, ylim = c(0, 40), xlab = "Discharge, in 1000s of cubic feet per second", ylab = "Freqency", main = "Histogram of Annual Peak Discharge\nOtter Creek at Middlebury, VT")
+axis(3, labels = FALSE)
+axis(4, labels = FALSE)
+boxplot(kQ, ylim = c(0, 14), ylab = "Discharge, in 1000s of cubic feet per second", main = "Boxplot of Annual Peak Discharge\nOtter Creek at Middlebury, VT")
+```
+
+The histogram certainly shows that the central tendency of the data lies in the range of 2,000 to 6,000 cubic feet per second and it also shows that the data tend to be positively skewed, but it gives very poor resolution about the behavior in the upper tail of the distribution as well as in the lowest discharges.  The boxplot is an improvement on that.  We can see the median clearly (close to 4,000 cubic feet per second) and that the data set is positively skewed.  That is seen in the asymmetry of the box, the location of the whiskers, and in the fact that there are two high outside values and no low outside values.  Also, it is possible to estimate the size of the three largest values just from visual inspection of the boxplot.
+
+```{r}
+x <- sort(kQ)
+n <- length(x)
+i <- seq(1, n)
+# note that we are using the Weibull plotting position
+# this is equivalent to type = 6 in the quantile function
+p <- i/(n + 1)
+Qbar <- mean(kQ)
+Qsd <- sd(kQ)
+zvals <- seq(-3, 3, 0.02)
+qvals <- (zvals * Qsd) + Qbar
+plot(zvals, qvals, type = "l", lwd = 2, xlim = c(-3, 3), xaxs = "i", ylim = c(0, 14), yaxs = "i", 
+     xlab = "Normal quantiles", ylab = "Discharge, in 1000s of cubic feet per second", las = 1, 
+     main = "Annual Peak Discharge\n Otter Creek at Middlebury, VT", cex.axis = 1.2, cex.lab = 1.0, tck = 0.02)
+z <- qnorm(p)
+par(new = TRUE)
+plot(z, x, pch = 20, xlim = c(-3, 3), xaxs = "i", ylim = c(0, 14), yaxs = "i", axes = FALSE, ylab = "", 
+     xlab = "", main = "", cex = 0.8)
+axis(3, at = c(seq(-2, 2, 1)), labels = NA, tck = 0.02)
+axis(4, labels = NA, tck = 0.02)
+```
+
+The shape of quantile plot shows that there is a serious departure from normality.  The data show a substantial positive skewness.  A log transformation is likely to work well.  Here is what we get with a log transformation.
+
+```{r}
+x <- log(1000 * x)
+n <- length(x)
+i <- seq(1, n)
+# note that we are using the Weibull plotting position
+# this is equivalent to type = 6 in the quantile function
+p <- i / (n + 1)
+Qbar <- mean(x)
+Qsd <- sd(x)
+zvals <- seq(-3, 3, 0.02)
+qvals <- (zvals * Qsd) + Qbar
+plot(zvals, qvals, type = "l", lwd = 2, xlim = c(-3, 3), xaxs = "i", ylim = c(7, 10), yaxs = "i", 
+     xlab = "Normal quantiles", ylab = "Natural log discharge, in cubic feet per second", las = 1, 
+     main = "Log of Annual Peak Discharge\n Otter Creek at Middlebury, VT", cex.axis = 1.2, cex.lab = 1.0, tck = 0.02)
+z <- qnorm(p)
+par(new = TRUE)
+plot(z, x, pch = 20, xlim = c(-3, 3), xaxs = "i", ylim = c(7, 10), yaxs = "i", axes = FALSE, ylab = "", 
+     xlab = "", main = "", cex = 0.8)
+axis(3, at = c(seq(-2, 2, 1)), labels = NA, tck = 0.02)
+axis(4, labels = NA, tck = 0.02)
+```
+
+The log transformation works well.  One might argue that some other transformation might do slightly better, but the log is probably a good choice given the theoretical underpinnings of the log normal distribution.
+
+# Exercise 2.2
+
+```{r}
+x <- c(1.3, 1.5, 1.8, 2.6, 2.8, 3.5, 4.0, 4.8, 8, 9.5, 12, 14, 19, 23, 41, 80, 100, 110, 120, 190, 240, 250, 300, 340, 580)
+par(las = 1, tck = 0.02, xaxs = "i", yaxs = "i")
+boxplot(x, ylim = c(0, 600), ylab = "Arsenic concentrations, in parts per billion", main = "Boxplot of arsenic concentrations\nfor groundwaters of southestern New Hampshire")
+# now the probability plot
+n <- length(x)
+i <- seq(1, n)
+# note that we are using the Weibull plotting position
+# this is equivalent to type = 6 in the quantile function
+p <- i / (n + 1)
+xbar <- mean(x)
+xsd <- sd(x)
+zvals <- seq(-3.5, 3.5, 0.02)
+qvals <- (zvals * xsd) + xbar
+plot(zvals, qvals, type = "l", lwd = 2, xlim = c(-3.5, 3.5), xaxs = "i", ylim = c(0, 600), yaxs = "i", 
+     xlab = "Normal quantiles", ylab = "Arsenic concentration, in parts per billion", las = 1, main = "",
+     cex.axis = 1.2, cex.lab = 1.2, tck = 0.02)
+z <- qnorm(p)
+par(new = TRUE, xaxs = "i", yacs = "i")
+plot(z, x, pch = 20, xlim = c(-3.5, 3.5), xaxs = "i", ylim = c(0, 600), yaxs = "i", axes = FALSE, ylab = "", 
+     xlab = "", main = "", cex = 0.8)
+pvals <- c(0.999, 0.99, 0.90, 0.50, 0.10, 0.01, 0.001)
+zvals <- qnorm((1 - pvals))
+pLabs <- c("99.9", "99", "90", "50", "10", "1", "0.1")
+axis(3, at = zvals, labels = pLabs, las = 1, cex.axis = 0.9, tck = 0.02)
+mtext("Probability of exceedance, in percent", side = 3, line = 3, cex = 1.2)
+abline(v = zvals, lty = "dashed", lwd = 0.5)
+axis(4, at = c(seq(0, 400, 100)), labels = NA, tck = 0.02)
+```
+
+Both graphics show that the data are highly skewed.  This suggests the use of a log transformation.  Here are the same to figures now done on the natural logarithms.
+
+```{r}
+x <- log(x)
+par(las = 1, tck = 0.02, xaxs = "i")
+boxplot(x, ylim = c(0, 7), ylab = "Natural log of arsenic concentration, in parts per billion", main = "Boxplot of arsenic concentrations\nfor groundwaters of southestern New Hampshire")
+# now the probability plot
+n <- length(x)
+i <- seq(1, n)
+# note that we are using the Weibull plotting position
+# this is equivalent to type = 6 in the quantile function
+p <- i / (n + 1)
+xbar <- mean(x)
+xsd <- sd(x)
+zvals <- seq(-3.5, 3.5, 0.02)
+qvals <- (zvals * xsd) + xbar
+plot(zvals, qvals, type = "l", lwd = 2, xlim = c(-3.5, 3.5), xaxs = "i", ylim = c(0, 7), yaxs = "i", 
+     xlab = "Normal quantiles", ylab = "Natural log of concentration, in parts per billion", las = 1, main = "", cex.axis = 1.2, 
+     cex.lab = 1.2, tck = 0.02)
+z <- qnorm(p)
+par(new = TRUE)
+plot(z, x, pch = 20, xlim = c(-3.5, 3.5), xaxs = "i", ylim = c(0, 7), yaxs = "i", axes = FALSE, ylab = "", xlab = "", 
+     main = "", cex = 0.8)
+pvals <- c(0.999, 0.99, 0.90, 0.50, 0.10, 0.01, 0.001)
+zvals <- qnorm((1 - pvals))
+pLabs <- c("99.9", "99", "90", "50", "10", "1", "0.1")
+axis(3, at = zvals, labels = pLabs, las = 1, cex.axis = 0.9, tck = 0.02)
+mtext("Probability of exceedance in percent", side = 3, line = 3, cex = 1.2)
+abline(v = zvals, lty = "dashed", lwd = 0.5)
+axis(4, at = c(seq(0, 400, 100)), labels = NA, tck = 0.02)
+```
+
+The log transformation works remarkably well.  The boxplot shows the symmetry and the probability plot shows good agreement with the normal throughout the distribution.
+
+# Exercise 2.3
+
+```{r fig.height=6, fig.width=6}
+g <- c(6, 0.5, 0.4, 0.7, 0.8, 6.0, 5.0, 0.6, 1.2, 0.3, 0.2, 0.5, 0.5, 10, 0.2, 0.2, 1.7, 3.0)
+q <- c(1.0, 0.2, 1.2, 1.0, 0.3, 0.1, 0.1, 0.4, 3.2, 0.3, 0.4, 1.8, 0.9, 0.1, 0.2, 0.3, 0.5)
+g <- sort(g)
+q <- sort(q)
+rock <- c(rep(0, 18), rep(1, 17))
+qqplot(g, q, xlim = c(0, 8), ylim = c(0, 8), 
+       main = "Q-Q plot of chloride concentration, in milligrams per liter\nfor two different rock types", xlab = "Granodiorite",
+       ylab = "Quartz Monzonite", cex = 1.4, cex.axis = 1.4, cex.lab = 1.4, las = 1, tck = 0.02, xaxs = "i", yaxs = "i")
+abline(a = 0, b = 1, lwd = 2)
+axis(3, labels = NA, tck = 0.02)
+axis(4, labels = NA, tck = 0.02)
+# now side-by-side boxplots
+x <- c(g, q)
+par(las = 1, tck = 0.02, xaxs = "i", yaxs = "i")
+rockNames <- c("Granodiorite", "Quartz Monzonite")
+boxplot(x ~ rock, ylim = c(0, 12), names = rockNames, ylab = "Concentration, in mg/L", 
+        main = "Boxplots of chloride concentrations \nfor two different rock types")
+# might be good to see the comparison on log concentration
+par(mar = c(5, 7, 4, 8) + 0.1)
+ticks <- c(0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20)
+atY <- log(ticks)
+boxplot(log(x) ~ rock, ylim = c(-3, 3),  names = rockNames, ylab = "Natural log of concentration, in milligrams per liter", 
+        main = "Boxplots of log chloride concentrations \nfor two different rock types")
+par(tck = NA, pty = "m")
+axis(4, at = atY, labels = ticks, las = 1, cex.axis = 0.8, tck = 0.02)
+par(las = 0)
+mtext("Chloride concentration, in milligrams per liter", side = 4, line = 2)
+```
+
+The Q-Q plot clearly shows that the two distributions are quite different, based on the fact that the points fall so far from the 1:1 line.  The side-by-side boxplots provide a very clear way to see the differences at a glance.  The difference in medians and difference in variability are very clear.  However, because the data are so highly skewed a set of side-by-side boxplots of the log concentrations may be the clearest way to see the differences between the two distributions.  The difference in medians is very clear showing the Granodiorite having a higher median and the quartiles are also showing the same thing.  Note that this is a boxplot of the logs and not a boxplot of the original data with its scale having a log transformation. Care should be taken to present a scale in the original units as well as the log scale in which the boxplots are presented.  
