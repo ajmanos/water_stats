@@ -1,0 +1,202 @@
+---
+title: "Chapter 3, Exercises"
+author: "Statistical Methods in Water Resources: 2nd Edition Team"
+date: "March 14, 2016"
+output: html_document
+---
+
+# Exercise 3.1
+The data are in the file grano.RData.  Read it in, print out the values and then compute the median.
+
+```{r}
+load("grano.RData")
+x <- grano$Chloride
+print(x)
+medianChloride <- quantile(x, probs = 0.5, type = 6)
+print(medianChloride)
+```
+
+Now compute the ranks of the 95% confidence intervals for the median and use those ranks to compute the values for the 95% confidence interval for the median.  Then compute the exact probability for this interval.  It should be close to 0.95.  The results show it to be just a little larger, at 0.969. 
+
+```{r}
+n <- length(x)
+ranks <- qbinom(c(0.025, 0.975), n, 0.5)
+rankLow <- ranks[1]
+rankHigh <- ranks[2]
+sort(x)[qbinom(c(0.025, 0.975), n, 0.5)]
+sum(dbinom(rankLow:rankHigh, size = n, prob = 0.5))
+```
+
+For a parametric approach we can take logs of the data, assume normality and compute the confidence interval for the mean of the logs and convert the limits back to real space.  Under the assumption of normality the confidence interval for the median is equivalent to the confidence interval of the mean.  Note also that the mean of the logs, transformed back to real space is the geometric mean and the confidence interval computed here is a confidence interval for the geometric mean.   
+
+```{r}
+y <- log(x)
+ybar <- mean(y)
+yvar <- var(y)
+LCLy <- ybar + qt(0.025, df = n - 1) * sqrt(yvar / n)
+UCLy <- ybar + qt(0.975, df = n - 1) * sqrt(yvar / n)
+exp(LCLy)
+exp(UCLy)
+```
+
+The result is that the confidence limits on the median using the assumption of log normality are very similar to the non-parametric confidence intervals. 
+
+Thus, the non-parametric confidence interval for the median is (0.4, 1.7).  The parametric confidence interval, assuming log-normality is (0.5, 1.8).  Both are reasonable estimates.
+
+# Exercise 3.2
+
+The data are in the file "VAWells.RData".  Let's list the data after sorting them, and then compute the 95% parametric prediction interval assuming normality.
+
+```{r}
+load("VAwells.RData")
+x <- VAwells$yields
+x <- sort(x)
+x
+meanx <- mean(x)
+meanx
+varx <- var(x)
+varx
+n <- length(x)
+n
+PILow <- meanx + qt(0.025, df = n - 1) * sqrt(varx + (varx / n))
+PIHigh <- meanx + qt(0.975, df = n - 1) * sqrt(varx + (varx / n))
+PI <- c(PILow, PIHigh)
+PI
+```
+
+The parametric prediction interval doesn't make sense because it negative values.  The distribution can only include positive values so this approach is inappropriate.  Now, lets try a non-parametric approach to the 95% prediction interval. 
+
+```{r}
+quantile(x, probs = c(0.025, 0.975), type = 6)
+```
+
+The result turns out to be simply the smallest and largest values in the data set.  This is not a reasonable result because it suggests that any value outside the range of the original 12 observations comes from a different distribution.  If the sample size were considerably larger and/or the alpha value for the prediction interval were considerably larger, then this approach might have merit, but here it does not.
+
+The one option that might work is to do the parametric interval on the logs of the data and then transform them back into real units.  We can compare this PI to the most extreme values in the sample.  We should expect that this PI has limits that are far beyond the extremes of this small data set.  
+
+```{r}
+y <- log(x)
+meany <- mean(y)
+meany
+vary <- var(y)
+PIyLow <- meany + qt(0.025, df = n - 1) * sqrt(vary + (vary / n))
+PIyHigh <- meany + qt(0.975, df = n - 1) * sqrt(vary + (vary / n))
+PIy <- c(PIyLow, PIyHigh)
+PIy
+PIx <- exp(PIy)
+PIx
+Obs <- c(x[1], x[n])
+Obs
+```
+
+Using this approach we get a reasonable prediction interval.  The lower bound is very close to zero and the upper bound is much higher than the highest observation in the data set.  But, this is very reasonable.  With such a small data set, a new observation must be much more extreme than any of the observations in order for it to be considered to come from a different distribution.  
+
+# Exercise 3.3
+
+The data are in Conecuh.RData.  Because the data show only mild asymmetry, we will not transform them.  First we will compute the mean and construct the 95% confidence interval for the mean.
+
+```{r}
+load("Conecuh.RData")
+x <- Conecuh$Flowcfs
+meanx <- mean(x)
+meanx
+varx <- var(x)
+n <- length(x)
+n
+LCL <- meanx + qt(0.025, df = n - 1) * sqrt(varx / n)
+UCL <- meanx + qt(0.975, df = n - 1) * sqrt(varx / n)
+CLmean <- c(LCL, UCL)
+CLmean
+```
+
+Note that the confidence interval for the mean is symmetric about the sample mean.  Now, lets compute the median and the confidence interval for it.
+
+```{r}
+medianx <- median(x)
+medianx
+qbinom(c(0.025, 0.975), n, 0.5)
+sort(x)[qbinom(c(0.025, 0.975), n, 0.5)]
+sum(dbinom(6 : 14, size = n, prob = 0.5))
+```
+
+Note that the confidence interval for the median (524, 859) is highly asymmetric around the estimated median, which is 581.  In contrast the confidence interval around the mean (557, 809) is symmetric around the estimated mean, which is 683.  The confidence interval about the median gives a better representation about uncertainty regarding the central tendency of the distribution than does the confidence interval about the mean.  Also note that the true alpha value for the confidence interval about the median is 0.041 rather than the selected alpha value of 0.05.
+
+We can also use the bootstrap approach for these problems.  Let's start with the median because we have provided you with a "wrapper function" that makes it easier to do.  You will have to load the boot library to do that and then source the BootMedian.R script.
+
+```{r}
+library(boot)
+source("BootMedian.R")
+set.seed(175) 
+# we set the seed here to assure that every time we run the function
+# we get the same result
+#
+# note that in the next command line, because we are using defaults
+# on the last three arguments of the BootMedian function
+# we could have simply used the command BootMedian(x)
+BootMedian(x, conf = 95, R = 10000, TYPE = "perc") 
+
+```
+
+What we get is a result that says the 95% bootstrap confidence interval for the median of (527.0, 876.5).  These are very close to what we get from the binomial apprach (524, 859).  Both methods properly reflect the asymetry of the distribution.  Either method is a very reasonable approach to take.
+
+We haven't given you a wrapper function for bootstrapping the mean, but if you dig ito the BootMedian code you can probably figure out how to bootstrap the mean.  Here is the calculation and the result.
+
+```{r}
+set.seed(175)
+f <- function(data,i) mean(data[i])
+B <- boot(x, f, R = 10000)
+BCIout <- boot.ci(B, type = "perc", conf = 0.95)
+BCIout
+```
+
+So with the bootstrap approach we get a 95% interval for the mean of (570.9, 802.5).  The parametric approach (which assumes normality) gives a confidence interval for the mean of (557, 809).  The results are not very different but the parametric approach has to be symmetric while the bootstrap does not have to be.  In this case the bootstrap has a difference between the mean and the lower bound of 112.1 and a differnce between the mean and the upper bound of 119.5. This may be a bit more realistic, given the asymmetry of the data.   
+
+# Exercise 3.4
+
+The data are stored in "PotomacOneDayLow.RData".  These data are the annual minimum one-day low flow of the Potomac River at Little Falls, above Washington DC (the location of the pumps delivering water to the city) expressed in cubic meters per second.  They cover water years 1932 - 2015.  The data are in a data frame called OneDayLow.  We can summarize the data, sort them from smallest to largest, determine the length of the record, and see a list of the values.
+
+```{r}
+load("PotomacOneDayLow.RData")
+summary(OneDayLow)
+Q <- OneDayLow$Q
+n <- length(Q)
+n
+sort(Q)
+```
+
+Now we can compute the 10th percentile on the distribution of one day low flows.  It will be a value between the 8th and 9th value on this list  (0.1 * (n + 1)) or 8.5 (that is half way between the 8th and 9th values on the sorted list of values).
+
+```{r}
+quantile(Q, probs = 0.1, type = 6)
+```
+
+But, recognizing the uncertainty in this estimate we want to be on the safe side an estimate the upper 95th percentile one-sided confidence interval for the 0.1 frequency low flow.  That means we are looking for a flow for which the probability is only 5% that the true 0.1 frequency low flow is less than this flow value.
+
+```{r}
+CIrank <- qbinom(p = 0.05, size = n, prob = 0.1)
+CIrank
+CIvalue <- sort(Q)[CIrank]
+CIvalue
+sum(dbinom(1:CIrank, n, 0.1))
+```
+
+The rank of the the Q value that has a probability of at least 95% of being the greater than or equal to the 0.1 frequency low flow is rank 4 (as compared to the the point estimate of the rank of the 0.1 frequency low flow which is rank 8.5).  The flow that has rank 4 is 10.59 cubic meters per second (as compared to the point estimate of the 0.1 frequency low flow which was 16.455 cubic meters per second).  The probability value of this estimate is 6.8%, which is slightly higher than our original choice of 5%, but because of the discrete nature of the distribution we can't get the exact probability that we pre-selected.  So our design flow would be 10.59 cubic meters per second.
+
+We could slightly improve on this estimate by computing it as the weighted average of the 3rd and 4th ranked flow values.  We see here that the 4th ranked value gives us a probability of 0.0684 that the true 0.1 frequency flow is less than it.  We can also determine that the probability for the 3rd ranked value is 0.0262.  So these two values bracket the desired value of 0.05.  We can compute a new estimate as the weighted sum of these two ranked flows as follows.  We do that by linearly interpolating between the 3rd and 4th ranked values based on the cumulative probabilities for those ranked values.
+
+```{r}
+prob4 <- sum(dbinom(1:4, n, 0.1))
+prob4
+prob3 <- sum(dbinom(1:3, n, 0.1))
+prob3
+Q4 <- sort(Q)[4]
+Q4 
+Q3 <- sort(Q)[3]
+Q3
+slope <- (Q3 - Q4) / (prob3 - prob4)
+intercept <- Q3 - slope * prob3
+Qresult <- intercept + slope * 0.05
+Qresult
+```
+
+Our result comes out to 9.16 cubic meters per second which lies between the 3rd rank (7.31) and the 4th rank (10.59).  This should be our design value.  Specifically, the intake pipe should be low enough that it will operate when the river discharge is as low as 9.16 cubic meters per second.
