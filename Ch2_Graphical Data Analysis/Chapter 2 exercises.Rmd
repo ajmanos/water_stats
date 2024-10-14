@@ -88,7 +88,7 @@ plot(zvals, qvals, type = "l", lwd = 2, xlim = c(-3.5, 3.5), xaxs = "i", ylim = 
      xlab = "Normal quantiles", ylab = "Arsenic concentration, in parts per billion", las = 1, main = "",
      cex.axis = 1.2, cex.lab = 1.2, tck = 0.02)
 z <- qnorm(p)
-par(new = TRUE, xaxs = "i", yacs = "i")
+par(new = TRUE, xaxs = "i", yaxs = "i")
 plot(z, x, pch = 20, xlim = c(-3.5, 3.5), xaxs = "i", ylim = c(0, 600), yaxs = "i", axes = FALSE, ylab = "", 
      xlab = "", main = "", cex = 0.8)
 pvals <- c(0.999, 0.99, 0.90, 0.50, 0.10, 0.01, 0.001)
